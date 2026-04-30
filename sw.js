@@ -1,5 +1,5 @@
 const CACHE = 'golfman-v2';
-const STATIC = ['/', '/index.html', '/manifest.json'];
+const STATIC = ['/golfman/', '/golfman/index.html', '/golfman/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
