@@ -357,12 +357,15 @@
     <div class="row2">
       <div>
         <label>Your Handicap</label>
-        <input type="number" id="handicap" min="0" max="54" step="0.1" placeholder="e.g. 18" class="nf" />
+        <input type="number" id="handicap" min="0" max="54" step="0.1" placeholder="e.g. 18" class="nf" oninput="updatePlayingHandicap()" />
       </div>
       <div>
         <label>Slope (optional)</label>
-        <input type="number" id="slope" min="55" max="155" placeholder="e.g. 113" class="nf" />
+        <input type="number" id="slope" min="55" max="155" placeholder="e.g. 113" class="nf" oninput="updatePlayingHandicap()" />
       </div>
+    </div>
+    <div id="playing-hcp-display" style="display:none; margin-top:10px; padding:8px 12px; background:var(--accent); border-radius:8px; font-size:0.9rem; color:var(--green);">
+      Playing handicap: <strong id="playing-hcp-val"></strong>
     </div>
   </div>
 
@@ -885,6 +888,9 @@ function selectCourse(course) {
 // ─── Navigation ─────────────────────────────────────────────────────────────
 function goToRound() {
   if (!selectedCourse) return;
+  const s = selectedCourse?.slope;
+  document.getElementById('slope').value = (s && s >= 55 && s <= 155) ? s : '';
+  document.getElementById('playing-hcp-display').style.display = 'none';
   buildHolesGrid();
   showScreen('screen-round');
 }
@@ -901,7 +907,9 @@ function showScreen(id) {
 
 function newRound() {
   document.getElementById('handicap').value = '';
-  document.getElementById('slope').value = selectedCourse ? selectedCourse.slope : '';
+  const s = selectedCourse?.slope;
+  document.getElementById('slope').value = (s && s >= 55 && s <= 155) ? s : '';
+  document.getElementById('playing-hcp-display').style.display = 'none';
   buildHolesGrid();
   showScreen('screen-round');
 }
@@ -1004,6 +1012,23 @@ function buildHolesGrid() {
   });
 }
 
+// ─── Playing Handicap Display ───────────────────────────────────────────────
+function updatePlayingHandicap() {
+  const hcp = parseFloat(document.getElementById('handicap').value);
+  const slope = parseFloat(document.getElementById('slope').value);
+  const display = document.getElementById('playing-hcp-display');
+  if (isNaN(hcp)) { display.style.display = 'none'; return; }
+  let ph;
+  if (!isNaN(slope) && slope >= 55 && slope <= 155) {
+    ph = Math.round(hcp * (slope / 113));
+    document.getElementById('playing-hcp-val').textContent = `${ph} (${hcp} × ${slope}/113)`;
+  } else {
+    ph = Math.round(hcp);
+    document.getElementById('playing-hcp-val').textContent = ph;
+  }
+  display.style.display = 'block';
+}
+
 // ─── Stableford Calculation ──────────────────────────────────────────────────
 function calculateScores() {
   const handicap = parseFloat(document.getElementById('handicap').value);
@@ -1014,9 +1039,9 @@ function calculateScores() {
     return;
   }
 
-  // Playing handicap: if slope provided, adjust; otherwise use raw handicap
+  // Playing handicap: only apply slope if it is a valid slope rating (55–155)
   let playingHandicap;
-  if (!isNaN(slopeVal) && slopeVal > 0) {
+  if (!isNaN(slopeVal) && slopeVal >= 55 && slopeVal <= 155) {
     playingHandicap = Math.round(handicap * (slopeVal / 113));
   } else {
     playingHandicap = Math.round(handicap);
