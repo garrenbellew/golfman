@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Golfman</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2d6a2d">
+<style>
+  :root {
+    --green: #2d6a2d;
+    --light-green: #4a9e4a;
+    --bg: #f0f4f0;
+    --card: #ffffff;
+    --border: #d0ddd0;
+    --text: #1a2e1a;
+    --muted: #6b7c6b;
+    --accent: #e8f5e8;
+    --yellow: #f5c542;
+    --red: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: var(--green);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  header span { font-size: 1.5rem; }
+  .screen { display: none; padding: 16px; }
+  .screen.active { display: block; }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    color: var(--text);
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 3px rgba(74,158,74,0.15);
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.75; }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-secondary { background: var(--border); color: var(--text); margin-top: 8px; }
+  .btn-sm {
+    display: inline-block;
+    width: auto;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  .location-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+  }
+  .loc-pending { background: #fff9e6; color: #856404; }
+  .loc-ok { background: #e8f5e8; color: var(--green); }
+  .loc-err { background: #fde8e8; color: var(--red); }
+  .course-list { list-style: none; }
+  .course-list li {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .course-list li:active, .course-list li.selected {
+    background: var(--accent);
+    border-color: var(--light-green);
+  }
+  .course-name { font-weight: 600; font-size: 0.95rem; }
+  .course-meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .holes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .hole-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .hole-card .hole-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .hole-card .hole-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 2px 0 6px;
+  }
+  .hole-card input {
+    margin-bottom: 0;
+    padding: 8px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .score-table th {
+    background: var(--green);
+    color: white;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+  .score-table td {
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-table tr:nth-child(even) td { background: var(--accent); }
+  .pts-0 { color: var(--muted); }
+  .pts-1 { color: #856404; font-weight: 600; }
+  .pts-2 { color: var(--green); font-weight: 700; }
+  .pts-3 { color: var(--light-green); font-weight: 700; }
+  .pts-4 { color: #1a6b1a; font-weight: 700; }
+  .total-row td {
+    background: var(--green) !important;
+    color: white !important;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 0;
+  }
+  .total-points {
+    text-align: center;
+    padding: 20px;
+    background: var(--green);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .total-points .big { font-size: 3rem; font-weight: 800; line-height: 1; }
+  .total-points .label { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: var(--light-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .notice {
+    background: #fff9e6;
+    border: 1px solid #f0d060;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #856404;
+    margin-bottom: 12px;
+  }
+  .handicap-badge {
+    display: inline-block;
+    background: var(--yellow);
+    color: #3d2b00;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-left: 6px;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .nf { margin-bottom: 0; }
+  .osm-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    background: #e0f0ff;
+    color: #1a5080;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .course-list li.osm { border-left: 3px solid #4a9ecc; }
+  .edit-hole-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .edit-hole-row:last-child { border-bottom: none; }
+  .edit-hole-num { font-weight: 700; font-size: 0.9rem; text-align: center; }
+  .edit-hole-row input { margin-bottom: 0; padding: 8px; text-align: center; }
+  .edit-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .edit-header span:not(:first-child) { text-align: center; }
+  .saved-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .saved-badge.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <span>⛳</span>
+  <h1>Golfman</h1>
+</header>
+
+<!-- SCREEN 1: Location + Course Selection -->
+<div id="screen-course" class="screen active">
+  <div class="card">
+    <h2>📍 Find Your Course</h2>
+    <div id="loc-status" class="location-status loc-pending">
+      <span>⏳</span> Getting your location…
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="getLocation()">Retry Location</button>
+  </div>
+
+  <div class="card" id="place-search-card">
+    <h2>🗺️ Search by Place</h2>
+    <div style="display:flex; gap:8px; margin-bottom:4px;">
+      <input type="text" id="place-input" placeholder="e.g. Fife, Scotland or Ponte Vedra"
+        style="margin-bottom:0; flex:1;" onkeydown="if(event.key==='Enter') searchByPlace()" />
+      <button class="btn btn-primary btn-sm" onclick="searchByPlace()" id="place-btn">Go</button>
+    </div>
+    <div id="place-status" style="font-size:0.82rem; color:var(--muted); min-height:18px; margin-top:4px;"></div>
+  </div>
+
+  <div class="card" id="course-card" style="display:none">
+    <h2>🏌️ Select Course</h2>
+    <input type="text" id="course-search" placeholder="Filter by name or country…" oninput="filterCourses()" />
+    <ul class="course-list" id="course-list"></ul>
+    <div id="no-courses" style="display:none; text-align:center; color:var(--muted); padding:16px; font-size:0.9rem;">
+      No courses found. Try a different place search above.
+    </div>
+  </div>
+
+  <div id="selected-course-panel" style="display:none;">
+    <div class="card">
+      <h2>✅ Selected Course</h2>
+      <div id="selected-course-name" style="font-weight:600; font-size:1rem; margin-bottom:4px;"></div>
+      <div id="selected-course-details" style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;"></div>
+      <button class="btn btn-primary" onclick="goToRound()">Start Round →</button>
+      <button class="btn btn-secondary" onclick="goToEditHoles()" style="margin-top:8px;">✏️ Edit Par / Stroke Index</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 1b: Edit Course Holes -->
+<div id="screen-edit" class="screen">
+  <div class="card">
+    <h2>✏️ Edit Hole Data <span id="edit-saved-badge" class="saved-badge">Saved!</span></h2>
+    <div style="font-size:0.85rem; color:var(--muted); margin-bottom:12px;" id="edit-course-name"></div>
+    <div class="edit-header">
+      <span></span><span>Par</span><span>Stroke Index</span>
+    </div>
+    <div id="edit-holes-list"></div>
+  </div>
+  <button class="btn btn-primary" onclick="saveHoleEdits()" style="margin:0 16px 8px; width:calc(100% - 32px);">Save &amp; Start Round →</button>
+  <button class="btn btn-secondary" onclick="showScreen('screen-course')" style="margin:0 16px; width:calc(100% - 32px);">← Back</button>
+</div>
+
+<!-- SCREEN 2: Round Setup + Hole Scores -->
+<div id="screen-round" class="screen">
+  <div class="card">
+    <h2>🏌️ Round Setup</h2>
+    <div class="row2">
+      <div>
+        <label>Your Handicap</label>
+        <input type="number" id="handicap" min="0" max="54" step="0.1" placeholder="e.g. 18" class="nf" />
+      </div>
+      <div>
+        <label>Slope (optional)</label>
+        <input type="number" id="slope" min="55" max="155" placeholder="e.g. 113" class="nf" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Enter Shots Per Hole</h2>
+    <div class="notice">💡 Enter the number of shots you took on each hole. <a href="#" onclick="goToEditHoles();return false;" style="color:var(--green);font-weight:600;">Edit Par/SI</a></div>
+    <div class="holes-grid" id="holes-grid"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="calculateScores()" style="margin:0 16px 8px; width:calc(100% - 32px);">Calculate Stableford →</button>
+  <button class="btn btn-secondary" onclick="goBack()" style="margin:0 16px; width:calc(100% - 32px);">← Back</button>
+</div>
+
+<!-- SCREEN 3: Results -->
+<div id="screen-results" class="screen">
+  <div id="total-display" class="total-points">
+    <div class="big" id="total-pts">—</div>
+    <div class="label">Stableford Points</div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Hole by Hole</h2>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>Hole</th>
+          <th>Par</th>
+          <th>SI</th>
+          <th>Strokes</th>
+          <th>Shots</th>
+          <th>Pts</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-secondary" onclick="showScreen('screen-round')" style="margin:0 16px; width:calc(100% - 32px);">← Edit Scores</button>
+  <button class="btn btn-primary" onclick="newRound()" style="margin:8px 16px 0; width:calc(100% - 32px);">New Round</button>
+</div>
+
+<script>
+// ─── Golf course data (embedded for offline use) ───────────────────────────
+// Sources: approximate coordinates and hole data for popular courses.
+// Hole data: par and stroke index (SI) for each hole.
+// Additional courses can be added to this array.
+
+const COURSES = [
+  {
+    name: "St Andrews Links – Old Course",
+    country: "Scotland",
+    lat: 56.3419, lng: -2.8028,
+    rating: 73.1, slope: 132,
+    holes: [
+      {par:4,si:11},{par:4,si:13},{par:4,si:3},{par:4,si:5},{par:5,si:9},
+      {par:4,si:15},{par:4,si:7},{par:3,si:17},{par:4,si:1},{par:4,si:2},
+      {par:3,si:18},{par:4,si:8},{par:4,si:14},{par:5,si:10},{par:4,si:4},
+      {par:4,si:6},{par:4,si:12},{par:4,si:16}
+    ]
+  },
+  {
+    name: "Augusta National Golf Club",
+    country: "USA",
+    lat: 33.5021, lng: -82.0232,
+    rating: 76.2, slope: 137,
+    holes: [
+      {par:4,si:9},{par:5,si:1},{par:4,si:11},{par:3,si:17},{par:4,si:7},
+      {par:3,si:15},{par:4,si:3},{par:5,si:5},{par:4,si:13},{par:4,si:12},
+      {par:4,si:6},{par:3,si:16},{par:5,si:2},{par:4,si:8},{par:5,si:4},
+      {par:3,si:18},{par:4,si:14},{par:4,si:10}
+    ]
+  },
+  {
+    name: "Royal Troon Golf Club – Old Course",
+    country: "Scotland",
+    lat: 55.5506, lng: -4.6689,
+    rating: 74.8, slope: 141,
+    holes: [
+      {par:4,si:9},{par:4,si:7},{par:4,si:11},{par:5,si:3},{par:3,si:17},
+      {par:5,si:1},{par:4,si:13},{par:3,si:15},{par:4,si:5},{par:4,si:4},
+      {par:4,si:6},{par:4,si:14},{par:4,si:12},{par:3,si:16},{par:4,si:2},
+      {par:5,si:8},{par:3,si:18},{par:4,si:10}
+    ]
+  },
+  {
+    name: "Muirfield (Honourable Company)",
+    country: "Scotland",
+    lat: 56.0346, lng: -2.8161,
+    rating: 73.8, slope: 134,
+    holes: [
+      {par:4,si:5},{par:4,si:11},{par:4,si:7},{par:3,si:17},{par:5,si:1},
+      {par:4,si:9},{par:4,si:15},{par:3,si:13},{par:5,si:3},{par:4,si:8},
+      {par:4,si:4},{par:4,si:14},{par:3,si:16},{par:4,si:12},{par:4,si:6},
+      {par:3,si:18},{par:5,si:2},{par:4,si:10}
+    ]
+  },
+  {
+    name: "Carnoustie Golf Links – Championship",
+    country: "Scotland",
+    lat: 56.5016, lng: -2.7056,
+    rating: 75.4, slope: 142,
+    holes: [
+      {par:4,si:11},{par:4,si:3},{par:4,si:13},{par:4,si:7},{par:4,si:5},
+      {par:5,si:1},{par:4,si:9},{par:3,si:17},{par:4,si:15},{par:4,si:4},
+      {par:4,si:8},{par:3,si:18},{par:4,si:6},{par:5,si:2},{par:4,si:10},
+      {par:3,si:16},{par:4,si:14},{par:4,si:12}
+    ]
+  },
+  {
+    name: "Wentworth Club – West Course",
+    country: "England",
+    lat: 51.4033, lng: -0.5609,
+    rating: 76.0, slope: 140,
+    holes: [
+      {par:4,si:9},{par:3,si:15},{par:4,si:3},{par:4,si:11},{par:3,si:17},
+      {par:5,si:1},{par:4,si:5},{par:4,si:13},{par:4,si:7},{par:4,si:10},
+      {par:4,si:4},{par:4,si:16},{par:3,si:18},{par:5,si:2},{par:4,si:6},
+      {par:4,si:8},{par:3,si:14},{par:4,si:12}
+    ]
+  },
+  {
+    name: "Sunningdale Golf Club – Old Course",
+    country: "England",
+    lat: 51.3875, lng: -0.6019,
+    rating: 72.7, slope: 131,
+    holes: [
+      {par:4,si:7},{par:4,si:9},{par:3,si:15},{par:4,si:3},{par:4,si:11},
+      {par:4,si:5},{par:4,si:13},{par:3,si:17},{par:5,si:1},{par:4,si:8},
+      {par:3,si:16},{par:4,si:4},{par:4,si:10},{par:4,si:6},{par:3,si:18},
+      {par:4,si:2},{par:4,si:14},{par:5,si:12}
+    ]
+  },
+  {
+    name: "The Belfry – Brabazon Course",
+    country: "England",
+    lat: 52.5425, lng: -1.7697,
+    rating: 73.8, slope: 136,
+    holes: [
+      {par:4,si:9},{par:4,si:3},{par:4,si:13},{par:3,si:17},{par:5,si:1},
+      {par:4,si:7},{par:4,si:11},{par:3,si:15},{par:5,si:5},{par:4,si:12},
+      {par:4,si:8},{par:4,si:2},{par:4,si:14},{par:3,si:18},{par:5,si:4},
+      {par:4,si:10},{par:3,si:16},{par:4,si:6}
+    ]
+  },
+  {
+    name: "Celtic Manor Resort – Twenty Ten Course",
+    country: "Wales",
+    lat: 51.5987, lng: -2.9838,
+    rating: 73.3, slope: 128,
+    holes: [
+      {par:4,si:9},{par:4,si:3},{par:3,si:15},{par:4,si:7},{par:5,si:1},
+      {par:4,si:13},{par:3,si:17},{par:4,si:5},{par:5,si:11},{par:4,si:10},
+      {par:3,si:18},{par:4,si:4},{par:4,si:12},{par:3,si:16},{par:5,si:2},
+      {par:4,si:6},{par:4,si:14},{par:4,si:8}
+    ]
+  },
+  {
+    name: "Royal County Down Golf Club",
+    country: "Northern Ireland",
+    lat: 54.2189, lng: -5.8891,
+    rating: 74.6, slope: 141,
+    holes: [
+      {par:4,si:9},{par:4,si:5},{par:4,si:11},{par:3,si:17},{par:4,si:3},
+      {par:3,si:13},{par:5,si:1},{par:4,si:15},{par:4,si:7},{par:4,si:10},
+      {par:4,si:4},{par:3,si:16},{par:4,si:12},{par:5,si:2},{par:3,si:18},
+      {par:4,si:6},{par:4,si:14},{par:4,si:8}
+    ]
+  },
+  {
+    name: "Royal Portrush – Dunluce Links",
+    country: "Northern Ireland",
+    lat: 55.2006, lng: -6.6552,
+    rating: 76.3, slope: 145,
+    holes: [
+      {par:4,si:9},{par:5,si:1},{par:3,si:17},{par:4,si:7},{par:4,si:11},
+      {par:3,si:15},{par:4,si:3},{par:4,si:13},{par:4,si:5},{par:4,si:10},
+      {par:4,si:6},{par:5,si:2},{par:3,si:18},{par:4,si:4},{par:4,si:8},
+      {par:3,si:16},{par:5,si:12},{par:4,si:14}
+    ]
+  },
+  {
+    name: "K Club – Palmer Course",
+    country: "Ireland",
+    lat: 53.3064, lng: -6.6275,
+    rating: 73.2, slope: 130,
+    holes: [
+      {par:4,si:5},{par:4,si:3},{par:3,si:17},{par:4,si:9},{par:5,si:1},
+      {par:3,si:13},{par:4,si:11},{par:4,si:7},{par:4,si:15},{par:5,si:2},
+      {par:4,si:8},{par:3,si:18},{par:4,si:4},{par:4,si:6},{par:5,si:10},
+      {par:3,si:16},{par:4,si:14},{par:4,si:12}
+    ]
+  },
+  {
+    name: "Portmarnock Golf Club",
+    country: "Ireland",
+    lat: 53.4206, lng: -6.1402,
+    rating: 74.4, slope: 136,
+    holes: [
+      {par:4,si:9},{par:4,si:3},{par:3,si:17},{par:4,si:7},{par:4,si:11},
+      {par:5,si:1},{par:4,si:5},{par:3,si:15},{par:4,si:13},{par:4,si:12},
+      {par:4,si:4},{par:3,si:18},{par:5,si:2},{par:4,si:10},{par:4,si:6},
+      {par:3,si:16},{par:4,si:14},{par:4,si:8}
+    ]
+  },
+  {
+    name: "Ballybunion Golf Club – Old Course",
+    country: "Ireland",
+    lat: 52.5159, lng: -9.6774,
+    rating: 74.7, slope: 138,
+    holes: [
+      {par:4,si:11},{par:4,si:5},{par:3,si:17},{par:4,si:7},{par:5,si:1},
+      {par:3,si:15},{par:4,si:9},{par:4,si:3},{par:4,si:13},{par:4,si:10},
+      {par:4,si:4},{par:3,si:18},{par:4,si:6},{par:5,si:2},{par:3,si:16},
+      {par:4,si:8},{par:4,si:12},{par:4,si:14}
+    ]
+  },
+  {
+    name: "Pebble Beach Golf Links",
+    country: "USA",
+    lat: 36.5684, lng: -121.9500,
+    rating: 75.5, slope: 145,
+    holes: [
+      {par:4,si:9},{par:5,si:1},{par:4,si:7},{par:4,si:13},{par:3,si:17},
+      {par:5,si:3},{par:3,si:15},{par:4,si:5},{par:4,si:11},{par:4,si:12},
+      {par:4,si:8},{par:3,si:18},{par:4,si:4},{par:5,si:2},{par:4,si:10},
+      {par:4,si:6},{par:3,si:16},{par:5,si:14}
+    ]
+  },
+  {
+    name: "TPC Sawgrass – Stadium Course",
+    country: "USA",
+    lat: 30.1975, lng: -81.3952,
+    rating: 76.8, slope: 144,
+    holes: [
+      {par:4,si:7},{par:5,si:1},{par:3,si:17},{par:4,si:9},{par:4,si:13},
+      {par:4,si:3},{par:4,si:11},{par:3,si:15},{par:5,si:5},{par:4,si:6},
+      {par:4,si:4},{par:4,si:10},{par:3,si:18},{par:4,si:2},{par:4,si:12},
+      {par:5,si:8},{par:3,si:16},{par:4,si:14}
+    ]
+  },
+  {
+    name: "Bethpage Black",
+    country: "USA",
+    lat: 40.7426, lng: -73.4643,
+    rating: 78.1, slope: 155,
+    holes: [
+      {par:4,si:5},{par:4,si:3},{par:3,si:17},{par:5,si:1},{par:4,si:9},
+      {par:4,si:7},{par:5,si:11},{par:3,si:15},{par:4,si:13},{par:4,si:8},
+      {par:4,si:4},{par:4,si:12},{par:5,si:2},{par:3,si:18},{par:4,si:10},
+      {par:4,si:6},{par:3,si:16},{par:4,si:14}
+    ]
+  },
+  {
+    name: "Royal Melbourne Golf Club – West Course",
+    country: "Australia",
+    lat: -37.9392, lng: 145.0431,
+    rating: 74.9, slope: 142,
+    holes: [
+      {par:4,si:5},{par:4,si:11},{par:4,si:3},{par:3,si:17},{par:4,si:9},
+      {par:4,si:13},{par:4,si:7},{par:4,si:15},{par:4,si:1},{par:4,si:10},
+      {par:4,si:4},{par:5,si:2},{par:4,si:8},{par:3,si:18},{par:4,si:14},
+      {par:3,si:16},{par:5,si:6},{par:4,si:12}
+    ]
+  },
+  {
+    name: "Cape Kidnappers Golf Course",
+    country: "New Zealand",
+    lat: -39.6506, lng: 177.0833,
+    rating: 74.4, slope: 138,
+    holes: [
+      {par:4,si:9},{par:4,si:5},{par:3,si:17},{par:5,si:1},{par:4,si:7},
+      {par:4,si:13},{par:3,si:15},{par:4,si:11},{par:5,si:3},{par:4,si:8},
+      {par:4,si:4},{par:3,si:18},{par:4,si:6},{par:4,si:10},{par:5,si:2},
+      {par:3,si:16},{par:4,si:12},{par:4,si:14}
+    ]
+  },
+  {
+    name: "Emirates Golf Club – Majlis Course",
+    country: "UAE",
+    lat: 25.1155, lng: 55.1730,
+    rating: 73.5, slope: 130,
+    holes: [
+      {par:4,si:9},{par:4,si:3},{par:3,si:15},{par:4,si:11},{par:5,si:1},
+      {par:4,si:7},{par:4,si:13},{par:3,si:17},{par:5,si:5},{par:4,si:12},
+      {par:4,si:8},{par:3,si:18},{par:4,si:4},{par:4,si:6},{par:5,si:2},
+      {par:3,si:16},{par:4,si:10},{par:4,si:14}
+    ]
+  }
+];
+
+// ─── State ──────────────────────────────────────────────────────────────────
+let userLat = null, userLng = null;
+let searchLat = null, searchLng = null;
+let allCourses = [...COURSES];
+let selectedCourse = null;
+let filteredCourses = [];
+
+const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
+const OVERPASS   = 'https://overpass-api.de/api/interpreter';
+
+// ─── Location ───────────────────────────────────────────────────────────────
+function getLocation() {
+  const el = document.getElementById('loc-status');
+  el.className = 'location-status loc-pending';
+  el.innerHTML = '<span>⏳</span> Getting your location…';
+
+  if (!navigator.geolocation) {
+    el.className = 'location-status loc-err';
+    el.innerHTML = '<span>❌</span> Geolocation not supported. Showing all courses.';
+    showAllCourses();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      searchLat = null; searchLng = null; // GPS wins over any previous place search
+      el.className = 'location-status loc-ok';
+      el.innerHTML = `<span>✅</span> Location found (${userLat.toFixed(3)}, ${userLng.toFixed(3)})`;
+      showNearbyCourses();
+    },
+    err => {
+      el.className = 'location-status loc-err';
+      el.innerHTML = '<span>⚠️</span> Location unavailable — search by place below, or browse all courses.';
+      showAllCourses();
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function setPlaceStatus(msg) {
+  document.getElementById('place-status').textContent = msg;
+}
+
+function showLoadingCourses(msg) {
+  document.getElementById('course-card').style.display = 'block';
+  document.getElementById('no-courses').style.display = 'none';
+  document.getElementById('course-list').innerHTML =
+    `<li style="padding:16px;text-align:center;color:var(--muted);list-style:none">${msg}</li>`;
+}
+
+function showNearbyCourses() {
+  const lat = searchLat ?? userLat;
+  const lng = searchLng ?? userLng;
+  showLoadingCourses('⏳ Finding nearby courses…');
+  fetchCoursesNear(lat, lng)
+    .then(({ courses, osmCount }) => {
+      filteredCourses = courses;
+      document.getElementById('course-search').value = '';
+      renderCourseList(courses);
+      setPlaceStatus(osmCount
+        ? `Found ${courses.length} courses nearby (${osmCount} from OpenStreetMap)`
+        : `Found ${courses.length} courses nearby`);
+    })
+    .catch(err => {
+      console.error('fetchCoursesNear error:', err);
+      showAllCourses();
+      setPlaceStatus(`Could not load courses: ${err.message}`);
+    });
+}
+
+function showAllCourses() {
+  filteredCourses = allCourses.map(c => ({ ...c, dist: null }));
+  renderCourseList(filteredCourses);
+  document.getElementById('course-card').style.display = 'block';
+}
+
+function filterCourses() {
+  const q = document.getElementById('course-search').value.toLowerCase().trim();
+  if (!q) { renderCourseList(filteredCourses); return; }
+  const lat = searchLat ?? userLat;
+  const lng = searchLng ?? userLng;
+  const res = filteredCourses.filter(c =>
+    c.name.toLowerCase().includes(q) || (c.country || '').toLowerCase().includes(q)
+  );
+  renderCourseList(res);
+}
+
+// ─── Place geocode + live OSM course fetch ─────────────────────────────────
+async function searchByPlace() {
+  const q = document.getElementById('place-input').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('place-btn');
+  btn.disabled = true;
+  setPlaceStatus('Searching…');
+
+  try {
+    const geoUrl = `${NOMINATIM}?q=${encodeURIComponent(q)}&format=json&limit=1&accept-language=en`;
+    const geoRes = await fetch(geoUrl);
+    if (!geoRes.ok) throw new Error(`Location lookup failed (HTTP ${geoRes.status})`);
+    const geoData = await geoRes.json();
+
+    if (!geoData.length) {
+      setPlaceStatus(`No location found for "${q}" — try a different name.`);
+      btn.disabled = false;
+      return;
+    }
+
+    searchLat = parseFloat(geoData[0].lat);
+    searchLng = parseFloat(geoData[0].lon);
+    const place = geoData[0].display_name.split(',').slice(0, 2).join(',').trim();
+    setPlaceStatus(`Found ${place} — fetching courses…`);
+    showLoadingCourses('⏳ Finding nearby courses…');
+    document.getElementById('course-card').style.display = 'block';
+
+    const { courses, osmCount } = await fetchCoursesNear(searchLat, searchLng);
+    filteredCourses = courses;
+    document.getElementById('course-search').value = '';
+    renderCourseList(courses);
+    setPlaceStatus(`Found ${courses.length} courses near ${place.split(',')[0]}` +
+      (osmCount ? ` (${osmCount} from OpenStreetMap)` : ''));
+  } catch (e) {
+    console.error('searchByPlace:', e);
+    setPlaceStatus(`Failed: ${e.message}`);
+  }
+  btn.disabled = false;
+}
+
+async function fetchCoursesNear(lat, lng) {
+  const radius = 30000;
+  const query = `[out:json][timeout:25];(way["leisure"="golf_course"](around:${radius},${lat},${lng});relation["leisure"="golf_course"](around:${radius},${lat},${lng});node["leisure"="golf_course"](around:${radius},${lat},${lng}););out center tags;`;
+
+  const res = await fetch(`${OVERPASS}?data=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
+  const data = await res.json();
+
+  const osmCourses = (data.elements || [])
+    .filter(el => el.tags && el.tags.name)
+    .map(el => {
+      const elLat = el.lat ?? el.center?.lat;
+      const elLng = el.lon ?? el.center?.lon;
+      if (!elLat || !elLng) return null;
+      const name = el.tags.name;
+      const country = el.tags['addr:country'] || el.tags['is_in:country'] || '';
+      const embedded = COURSES.find(c =>
+        c.name.toLowerCase().includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(c.name.toLowerCase().split('–')[0].trim())
+      );
+      if (embedded) return { ...embedded, dist: haversineKm(lat, lng, embedded.lat, embedded.lng) };
+      return {
+        name, country, lat: elLat, lng: elLng,
+        rating: parseFloat(el.tags['golf:course_rating']) || null,
+        slope: null,
+        holes: defaultHoles(),
+        osm: true,
+        dist: haversineKm(lat, lng, elLat, elLng)
+      };
+    })
+    .filter(Boolean);
+
+  const embeddedNearby = COURSES
+    .filter(c => !osmCourses.find(o => !o.osm && o.name === c.name))
+    .map(c => ({ ...c, dist: haversineKm(lat, lng, c.lat, c.lng) }))
+    .filter(c => c.dist < 100);
+
+  const courses = [...osmCourses, ...embeddedNearby]
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 30);
+
+  return { courses, osmCount: osmCourses.length };
+}
+
+function defaultHoles() {
+  const pars = [4,4,3,4,5,4,3,4,5,4,4,3,4,5,4,3,4,5];
+  const sis  = [1,3,17,9,5,11,15,7,13,2,4,18,10,6,12,16,8,14];
+  return pars.map((par, i) => ({ par, si: sis[i] }));
+}
+
+function renderCourseList(courses) {
+  const ul = document.getElementById('course-list');
+  const none = document.getElementById('no-courses');
+  ul.innerHTML = '';
+  if (courses.length === 0) {
+    none.style.display = 'block';
+    return;
+  }
+  none.style.display = 'none';
+  courses.forEach(c => {
+    const li = document.createElement('li');
+    if (c.osm) li.classList.add('osm');
+    const distStr = c.dist != null
+      ? ` &middot; ${c.dist < 10 ? c.dist.toFixed(1) : Math.round(c.dist)} km away`
+      : '';
+    const ratingStr = c.rating ? ` &middot; Rating: ${c.rating}` : '';
+    const slopeStr = c.slope ? ` &middot; Slope: ${c.slope}` : '';
+    const osmBadge = c.osm ? '<span class="osm-badge">OpenStreetMap</span>' : '';
+    li.innerHTML = `
+      <div class="course-name">${c.name}${osmBadge}</div>
+      <div class="course-meta">${c.country}${distStr}${ratingStr}${slopeStr}</div>`;
+    li.onclick = () => selectCourse(c);
+    ul.appendChild(li);
+  });
+}
+
+function selectCourse(course) {
+  selectedCourse = applyHoleOverrides(course);
+  try { localStorage.setItem('golfman_course', JSON.stringify(selectedCourse)); } catch(e) {}
+  document.getElementById('selected-course-name').textContent = course.name;
+  const meta = [
+    course.country,
+    course.rating ? `Rating: ${course.rating}` : null,
+    course.slope ? `Slope: ${course.slope}` : 'Slope: enter manually',
+    course.osm ? 'Hole data: standard defaults — enter slope if known' : null
+  ].filter(Boolean).join(' · ');
+  document.getElementById('selected-course-details').textContent = meta;
+  document.getElementById('selected-course-panel').style.display = 'block';
+  document.getElementById('slope').value = course.slope || '';
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// ─── Navigation ─────────────────────────────────────────────────────────────
+function goToRound() {
+  if (!selectedCourse) return;
+  buildHolesGrid();
+  showScreen('screen-round');
+}
+
+function goBack() {
+  showScreen('screen-course');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function newRound() {
+  document.getElementById('handicap').value = '';
+  document.getElementById('slope').value = selectedCourse ? selectedCourse.slope : '';
+  buildHolesGrid();
+  showScreen('screen-round');
+}
+
+// ─── Edit Course Holes ───────────────────────────────────────────────────────
+function courseKey(course) {
+  return 'golfman_holes_' + (course.name + course.lat + course.lng).replace(/\s/g, '_');
+}
+
+function loadSavedHoles(course) {
+  try {
+    const raw = localStorage.getItem(courseKey(course));
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function applyHoleOverrides(course) {
+  const saved = loadSavedHoles(course);
+  if (saved) course.holes = saved;
+  return course;
+}
+
+function makeNumberInput(id, value, min, max) {
+  const el = document.createElement('input');
+  el.type = 'number';
+  el.id = id;
+  el.value = value;
+  el.min = min;
+  el.max = max;
+  el.setAttribute('inputmode', 'numeric');
+  el.setAttribute('pattern', '[0-9]*');
+  return el;
+}
+
+function goToEditHoles() {
+  if (!selectedCourse) return;
+  document.getElementById('edit-course-name').textContent = selectedCourse.name;
+  const list = document.getElementById('edit-holes-list');
+  list.innerHTML = '';
+  selectedCourse.holes.forEach((h, i) => {
+    const row = document.createElement('div');
+    row.className = 'edit-hole-row';
+    const num = document.createElement('div');
+    num.className = 'edit-hole-num';
+    num.textContent = i + 1;
+    row.appendChild(num);
+    row.appendChild(makeNumberInput(`edit-par-${i}`, h.par, 3, 6));
+    row.appendChild(makeNumberInput(`edit-si-${i}`, h.si, 1, 18));
+    list.appendChild(row);
+  });
+  document.getElementById('edit-saved-badge').classList.remove('show');
+  showScreen('screen-edit');
+}
+
+function saveHoleEdits() {
+  const holes = selectedCourse.holes.map((h, i) => {
+    const par = parseInt(document.getElementById(`edit-par-${i}`)?.value) || h.par;
+    const si  = parseInt(document.getElementById(`edit-si-${i}`)?.value)  || h.si;
+    return { par, si };
+  });
+
+  const sis = holes.map(h => h.si);
+  if (new Set(sis).size !== 18 || sis.some(s => s < 1 || s > 18)) {
+    alert('Stroke indexes must be 1–18 with no duplicates.');
+    return;
+  }
+
+  selectedCourse.holes = holes;
+  try {
+    localStorage.setItem(courseKey(selectedCourse), JSON.stringify(holes));
+    localStorage.setItem('golfman_course', JSON.stringify(selectedCourse));
+  } catch(e) {}
+
+  const badge = document.getElementById('edit-saved-badge');
+  badge.classList.add('show');
+  setTimeout(() => {
+    buildHolesGrid();
+    showScreen('screen-round');
+  }, 600);
+}
+
+// ─── Holes Grid ─────────────────────────────────────────────────────────────
+function buildHolesGrid() {
+  const grid = document.getElementById('holes-grid');
+  grid.innerHTML = '';
+  selectedCourse.holes.forEach((h, i) => {
+    const div = document.createElement('div');
+    div.className = 'hole-card';
+    div.innerHTML = `
+      <div class="hole-num">Hole ${i + 1}</div>
+      <div class="hole-info">
+        <span>Par ${h.par}</span>
+        <span>SI ${h.si}</span>
+      </div>
+      <input type="number" id="shots-${i}" min="1" max="20" placeholder="shots"
+        inputmode="numeric" pattern="[0-9]*" />
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ─── Stableford Calculation ──────────────────────────────────────────────────
+function calculateScores() {
+  const handicap = parseFloat(document.getElementById('handicap').value);
+  const slopeVal = parseFloat(document.getElementById('slope').value);
+
+  if (isNaN(handicap)) {
+    alert('Please enter your handicap.');
+    return;
+  }
+
+  // Playing handicap: if slope provided, adjust; otherwise use raw handicap
+  let playingHandicap;
+  if (!isNaN(slopeVal) && slopeVal > 0) {
+    playingHandicap = Math.round(handicap * (slopeVal / 113));
+  } else {
+    playingHandicap = Math.round(handicap);
+  }
+
+  const tbody = document.getElementById('results-body');
+  tbody.innerHTML = '';
+  let totalPts = 0;
+  let totalShots = 0;
+  let allEntered = true;
+
+  selectedCourse.holes.forEach((h, i) => {
+    const shotsEl = document.getElementById(`shots-${i}`);
+    const shots = parseInt(shotsEl?.value);
+
+    if (isNaN(shots) || shots < 1) {
+      allEntered = false;
+    }
+
+    // Strokes received on this hole
+    const strokesOnHole = Math.floor(playingHandicap / 18) +
+      (h.si <= (playingHandicap % 18) ? 1 : 0);
+
+    const net = shots - strokesOnHole;
+    const diff = h.par - net;       // par minus net score
+    const pts = Math.max(0, diff + 2); // stableford points
+
+    totalPts += pts;
+    totalShots += isNaN(shots) ? 0 : shots;
+
+    const tr = document.createElement('tr');
+    let ptsClass = `pts-${Math.min(pts, 4)}`;
+    tr.innerHTML = `
+      <td><strong>${i + 1}</strong></td>
+      <td>${h.par}</td>
+      <td>${h.si}</td>
+      <td>${strokesOnHole}</td>
+      <td>${isNaN(shots) ? '—' : shots}</td>
+      <td class="${ptsClass}"><strong>${isNaN(shots) ? '—' : pts}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Totals row
+  const totalRow = document.createElement('tr');
+  totalRow.className = 'total-row';
+  const totalPar = selectedCourse.holes.reduce((s, h) => s + h.par, 0);
+  totalRow.innerHTML = `
+    <td colspan="3">Total</td>
+    <td>—</td>
+    <td>${totalShots || '—'}</td>
+    <td>${totalPts}</td>
+  `;
+  tbody.appendChild(totalRow);
+
+  document.getElementById('total-pts').textContent = totalPts;
+  showScreen('screen-results');
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+// Restore last selected course from localStorage (works offline)
+try {
+  const saved = localStorage.getItem('golfman_course');
+  if (saved) {
+    const course = JSON.parse(saved);
+    selectedCourse = applyHoleOverrides(course);
+    document.getElementById('selected-course-name').textContent = course.name;
+    const meta = [
+      course.country,
+      course.rating ? `Rating: ${course.rating}` : null,
+      course.slope ? `Slope: ${course.slope}` : null,
+    ].filter(Boolean).join(' · ');
+    document.getElementById('selected-course-details').textContent = meta;
+    document.getElementById('selected-course-panel').style.display = 'block';
+    document.getElementById('slope').value = course.slope || '';
+  }
+} catch(e) {}
+
+getLocation();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
