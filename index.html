@@ -415,6 +415,32 @@
 // Additional courses can be added to this array.
 
 const COURSES = [
+ {
+    name: "Serena Golf",
+    country: "",
+    lat: 37.7293392, lng: -0.8675102,
+    rating: null, slope: null,
+    holes: [
+      {par:5,si:7},
+      {par:4,si:5},
+      {par:3,si:1},
+      {par:4,si:11},
+      {par:4,si:3},
+      {par:4,si:15},
+      {par:5,si:17},
+      {par:4,si:9},
+      {par:3,si:13},
+      {par:4,si:6},
+      {par:5,si:18},
+      {par:4,si:2},
+      {par:4,si:16},
+      {par:4,si:10},
+      {par:3,si:8},
+      {par:4,si:12},
+      {par:3,si:4},
+      {par:5,si:14}
+    ]
+  },
   {
     name: "St Andrews Links – Old Course",
     country: "Scotland",
@@ -684,17 +710,20 @@ function getLocation() {
     pos => {
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
-      searchLat = null; searchLng = null; // GPS wins over any previous place search
+      searchLat = null; searchLng = null;
       el.className = 'location-status loc-ok';
       el.innerHTML = `<span>✅</span> Location found (${userLat.toFixed(3)}, ${userLng.toFixed(3)})`;
       showNearbyCourses();
     },
     err => {
       el.className = 'location-status loc-err';
-      el.innerHTML = '<span>⚠️</span> Location unavailable — search by place below, or browse all courses.';
+      const msg = err.code === 1
+        ? '⚠️ Location permission denied — please allow location access in your browser settings, then tap Retry.'
+        : '⚠️ Location unavailable — search by place name below instead.';
+      el.innerHTML = msg;
       showAllCourses();
     },
-    { timeout: 10000, maximumAge: 60000 }
+    { timeout: 15000, maximumAge: 300000, enableHighAccuracy: false }
   );
 }
 
