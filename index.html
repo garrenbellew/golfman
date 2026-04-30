@@ -347,6 +347,7 @@
     <div id="edit-holes-list"></div>
   </div>
   <button class="btn btn-primary" onclick="saveHoleEdits()" style="margin:0 16px 8px; width:calc(100% - 32px);">Save &amp; Start Round →</button>
+  <button class="btn btn-secondary" onclick="shareHoleData()" style="margin:0 16px 8px; width:calc(100% - 32px);">📤 Share to help other golfers</button>
   <button class="btn btn-secondary" onclick="showScreen('screen-course')" style="margin:0 16px; width:calc(100% - 32px);">← Back</button>
 </div>
 
@@ -990,6 +991,35 @@ function saveHoleEdits() {
     buildHolesGrid();
     showScreen('screen-round');
   }, 600);
+}
+
+function shareHoleData() {
+  const c = selectedCourse;
+  const holes = c.holes.map((h, i) =>
+    `      {par:${h.par},si:${h.si}}`
+  ).join(',\n');
+
+  const snippet =
+`  {\n` +
+`    name: "${c.name}",\n` +
+`    country: "${c.country || ''}",\n` +
+`    lat: ${c.lat}, lng: ${c.lng},\n` +
+`    rating: ${c.rating || 'null'}, slope: ${c.slope || 'null'},\n` +
+`    holes: [\n${holes}\n    ]\n` +
+`  }`;
+
+  const title = encodeURIComponent(`Course data: ${c.name}`);
+  const body = encodeURIComponent(
+`## Course hole data submission\n\n` +
+`**Course:** ${c.name}\n` +
+`**Country:** ${c.country || 'unknown'}\n\n` +
+`Please add this entry to the \`COURSES\` array in \`index.html\`:\n\n` +
+`\`\`\`js\n${snippet}\n\`\`\`\n\n` +
+`_Submitted from the Golfman app_`
+  );
+
+  const url = `https://github.com/garrenbellew/golfman/issues/new?title=${title}&body=${body}`;
+  window.open(url, '_blank');
 }
 
 // ─── Holes Grid ─────────────────────────────────────────────────────────────
